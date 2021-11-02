@@ -1,4 +1,4 @@
-21.11.02 add queue for bufferbool,indicate that what the page recently used index
+21.11.02 add queue for bufferbool,indicate that what the page recently used
 
 
 course-info

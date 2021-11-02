@@ -99,6 +99,7 @@ public class BufferPool {
 			PagesMap.put(pid, Database.getCatalog()
 					.getDatabaseFile(pid.getTableId())
 					.readPage(pid));
+			queue.add(pid);
 			count++;
     			//if( PagesMap.contains(pid) )
     				//System.out.println("success!!");
@@ -108,7 +109,7 @@ public class BufferPool {
     	//System.out.println("page:"+PagesMap.get(pid));
     	//System.out.println("pid:"+pid);
     	//queue.remove(pid);
-		queue.add(pid);
+		
         return PagesMap.get(pid);
     }
 
