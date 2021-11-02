@@ -8,7 +8,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.io.*;
-
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,6 +35,8 @@ public class BufferPool {
     
     private int numPages = 0;
     private ConcurrentHashMap<PageId,Page> PagesMap = null;
+    
+    ArrayList<PageId> queue;
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -45,6 +47,7 @@ public class BufferPool {
         // some code goes here
     	this.numPages = numPages;
     	PagesMap = new ConcurrentHashMap<PageId,Page>();
+    	queue = new ArrayList<PageId>();
     }
     
     public static int getPageSize() {
@@ -83,23 +86,29 @@ public class BufferPool {
     	if(PagesMap.containsKey(pid))
     	{
     		//System.out.println("--------------------we find Pages!"+pid);
+    		queue.remove(pid);
+    		queue.add(pid);
     		return PagesMap.get(pid);
     	}
     	else {
     		//System.out.println("calc hashcode!");
     		if(PagesMap.size() >= this.numPages)
-    			evictPage();//TODO
-    		else
     		{
-    			PagesMap.put(pid, Database.getCatalog()
-    					.getDatabaseFile(pid.getTableId())
-    					.readPage(pid));
-    			count++;
+    			evictPage();//TODO
+    		}
+			PagesMap.put(pid, Database.getCatalog()
+					.getDatabaseFile(pid.getTableId())
+					.readPage(pid));
+			count++;
     			//if( PagesMap.contains(pid) )
     				//System.out.println("success!!");
     			//System.out.println("numPages:"+numPages+"   count:"+count);
-    		}
+    		
     	}
+    	//System.out.println("page:"+PagesMap.get(pid));
+    	//System.out.println("pid:"+pid);
+    	//queue.remove(pid);
+		queue.add(pid);
         return PagesMap.get(pid);
     }
 
@@ -165,6 +174,14 @@ public class BufferPool {
         throws DbException, IOException, TransactionAbortedException {
         // some code goes here
         // not necessary for lab1
+    	DbFile cur = Database.getCatalog().getDatabaseFile(tableId);
+    	ArrayList<Page> affectedPgs = (ArrayList<Page>)cur.insertTuple(tid, t);
+        for (Page page : affectedPgs) {
+            page.markDirty(true, tid);
+            // bufferPool.replace(page.getId(), page);
+            // bufferPool.remove(page.getId());
+            PagesMap.put(page.getId(), page);
+        }
     }
 
     /**
@@ -184,6 +201,12 @@ public class BufferPool {
         throws DbException, IOException, TransactionAbortedException {
         // some code goes here
         // not necessary for lab1
+    	DbFile cur = Database.getCatalog().getDatabaseFile(t.getRecordId().getPageId().getTableId());
+    	ArrayList<Page> affectedPg = (ArrayList<Page>)cur.deleteTuple(tid, t);
+        affectedPg.get(0).markDirty(true, tid);
+
+        // bufferPool.remove(affectedPg.getId());
+        PagesMap.put(affectedPg.get(0).getId(), affectedPg.get(0));
     }
 
     /**
@@ -194,7 +217,10 @@ public class BufferPool {
     public synchronized void flushAllPages() throws IOException {
         // some code goes here
         // not necessary for lab1
-
+    	for(PageId t : PagesMap.keySet() )
+    	{
+    		flushPage(t);
+    	}
     }
 
     /** Remove the specific page id from the buffer pool.
@@ -208,6 +234,8 @@ public class BufferPool {
     public synchronized void discardPage(PageId pid) {
         // some code goes here
         // not necessary for lab1
+    	PagesMap.remove(pid);
+    	queue.remove(pid);
     }
 
     /**
@@ -217,6 +245,11 @@ public class BufferPool {
     private synchronized  void flushPage(PageId pid) throws IOException {
         // some code goes here
         // not necessary for lab1
+    	if( PagesMap.contains(pid) )
+    	{
+    		Page pg = PagesMap.get(pid);
+    		Database.getCatalog().getDatabaseFile(pg.getId().getTableId()).writePage(pg);
+    	}
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -233,6 +266,13 @@ public class BufferPool {
     private synchronized  void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1
+        PageId pid = queue.get(0);
+        try {
+            flushPage(pid);
+            discardPage(pid);
+        } catch (IOException e) {
+            throw new DbException("evictPage: unable to error when flush a page");
+        }
     }
 
 }
