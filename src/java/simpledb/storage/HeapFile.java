@@ -110,9 +110,9 @@ public class HeapFile implements DbFile {
         final int pageSize = Database.getBufferPool().getPageSize();
         byte[] pgData = page.getPageData();
 
-        RandomAccessFile dbfile = new RandomAccessFile(f, "rws");
-        dbfile.skipBytes(pgNo * pageSize);
-        dbfile.write(pgData);
+        RandomAccessFile file = new RandomAccessFile(f, "rws");
+        file.skipBytes(pgNo * pageSize);
+        file.write(pgData);
     }
 
     /**
