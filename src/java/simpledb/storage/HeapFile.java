@@ -90,6 +90,7 @@ public class HeapFile implements DbFile {
             FileInputStream in = new FileInputStream(f);
             in.skip(pgNo * pageSize);
             in.read(rawPgData);
+            in.close();
             return new HeapPage(new HeapPageId(tableid, pgNo), rawPgData);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("FileNotFoundException:"+e.toString());
@@ -113,6 +114,8 @@ public class HeapFile implements DbFile {
         RandomAccessFile file = new RandomAccessFile(f, "rws");
         file.skipBytes(pgNo * pageSize);
         file.write(pgData);
+        file.close();
+        System.out.println("i'm write file!");
     }
 
     /**

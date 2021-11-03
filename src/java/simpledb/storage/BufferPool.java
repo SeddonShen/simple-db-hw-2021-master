@@ -218,6 +218,7 @@ public class BufferPool {
     public synchronized void flushAllPages() throws IOException {
         // some code goes here
         // not necessary for lab1
+    	System.out.println("i'm flushAllPages");
     	for(PageId t : PagesMap.keySet() )
     	{
     		flushPage(t);
@@ -246,10 +247,11 @@ public class BufferPool {
     private synchronized  void flushPage(PageId pid) throws IOException {
         // some code goes here
         // not necessary for lab1
-    	if( PagesMap.contains(pid) )
+    	if( PagesMap.containsKey(pid) )
     	{
     		Page pg = PagesMap.get(pid);
     		Database.getCatalog().getDatabaseFile(pg.getId().getTableId()).writePage(pg);
+    		//((HeapFile)Database.getCatalog().getDatabaseFile(pg.getId().getTableId())).writePage(pg);
     	}
     }
 

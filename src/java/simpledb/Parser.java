@@ -571,11 +571,6 @@ public class Parser {
 
     public static void main(String[] argv) throws IOException {
     	
-    	
-    	String a = null;
-    	System.out.print(a+"123");
-    	System.exit(0);
-
         if (argv.length < 1 || argv.length > 4) {
             System.out.println("Invalid number of arguments.\n" + usage);
             System.exit(0);
@@ -668,6 +663,7 @@ public class Parser {
                     byte[] statementBytes = cmd.getBytes(StandardCharsets.UTF_8);
                     if (cmd.equalsIgnoreCase("quit;")
                             || cmd.equalsIgnoreCase("exit;")) {
+                    	Database.getBufferPool().flushAllPages();
                         shutdown();
                         quit = true;
                         break;
