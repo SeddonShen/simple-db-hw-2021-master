@@ -68,20 +68,39 @@ public class AbortEvictionTest extends SimpleDbTestBase {
         // Allocate a file with ~10 pages of data
         HeapFile f = SystemTestUtil.createRandomHeapFile(2, 512*10, null, null);
         Database.resetBufferPool(2);
-
+        
         // BEGIN TRANSACTION
         Transaction t = new Transaction();
         t.start();
-
+        /*
+        DbFileIterator it = f.iterator(t.getId());
         // Insert a new row
+        it.open();
+        int Count = 0;
+        while(it.hasNext())
+        {
+        	it.next();
+        	Count++;
+        }
+        System.out.println(Count);
+        */
         AbortEvictionTest.insertRow(f, t);
-
+        /*
+        it.rewind();
+        
+        Count = 0;
+        while(it.hasNext())
+        {
+        	it.next();
+        	Count++;
+        }
+        System.out.println(Count);
+        */
         // The tuple must exist in the table
         boolean found = AbortEvictionTest.findMagicTuple(f, t);
         assertTrue(found);
         // ABORT
         t.transactionComplete(true);
-
         // A second transaction must not find the tuple
         t = new Transaction();
         t.start();

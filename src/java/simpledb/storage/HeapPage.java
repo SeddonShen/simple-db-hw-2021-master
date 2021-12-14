@@ -341,11 +341,11 @@ public class HeapPage implements Page {
         // some code goes here
     	if( i < numSlots )
     	{
-    	int posx = i/8;
-    	int posy = i%8;
-    	if( posx >= header.length )
-    		System.out.println("i:"+i+" header.len:"+header.length+" posx:"+posx);
-    	return ((header[posx]>>posy) & 1) == 1;
+	    	int posx = i/8;
+	    	int posy = i%8;
+	    	if( posx >= header.length )
+	    		System.out.println("i:"+i+" header.len:"+header.length+" posx:"+posx);
+	    	return ((header[posx]>>posy) & 1) == 1;
     	}
     	return false;
         //return false;

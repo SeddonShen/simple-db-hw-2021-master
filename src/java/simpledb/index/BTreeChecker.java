@@ -43,8 +43,10 @@ public class BTreeChecker {
         static SubtreeSummary checkAndMerge(SubtreeSummary accleft, SubtreeSummary right) {
             assert(accleft.depth == right.depth);
             assert(accleft.ptrRight.equals(right.leftmostId));
+            //System.out.println(accleft.rightmostId+"  "+right.ptrLeft);
             assert(accleft.rightmostId.equals(right.ptrLeft));
-
+            
+            
             SubtreeSummary ans = new SubtreeSummary();
             ans.depth = accleft.depth;
 
@@ -84,8 +86,9 @@ public class BTreeChecker {
                                        BTreePageId parentId, boolean checkOccupancy, int depth) throws
             TransactionAbortedException, DbException {
         BTreePage page = (BTreePage )bt.getPage(tid, dirtypages, pageId, Permissions.READ_ONLY);
+        //System.out.println(page.getParentId()+"  "+parentId);
         assert(page.getParentId().equals(parentId));
-
+        //
         if (page.getId().pgcateg() == BTreePageId.LEAF) {
             BTreeLeafPage bpage = (BTreeLeafPage) page;
             bpage.checkRep(bt.keyField(), lowerBound, upperBound, checkOccupancy, depth);

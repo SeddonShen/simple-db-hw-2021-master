@@ -2,8 +2,7 @@
 
 
 21.11.03 by package the java file,use cmd "java -jar simpledb.jar parser catalog.txt"<br>
-i find a bug in src/java/simpledb/storage/BufferPool.java.
-
+i find a bug in src/java/simpledb/storage/BufferPool.java.<br>
 it's a function in HashMap,i use containsKey mistakesly,it has be fixed now;
 
 

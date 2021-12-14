@@ -115,7 +115,7 @@ public class HeapFile implements DbFile {
         file.skipBytes(pgNo * pageSize);
         file.write(pgData);
         file.close();
-        System.out.println("i'm write file!");
+        //System.out.println("i'm write file!");
     }
 
     /**
