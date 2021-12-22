@@ -383,22 +383,25 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid, boolean commit) {
         // some code goes here
         // not necessary for lab1|lab2
-    	if (commit) {
-            // flush all the pages into disk
-            try {
-				flushPages(tid);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        }
-    	ArrayList<PageId> lockList = lockMgr.getLockList(tid);
+        ArrayList<PageId> lockList = lockMgr.getLockList(tid);
         if (lockList != null) {
             for (PageId pid : lockList) {
                 Page pg = PagesMap.getOrDefault(pid, null);
-                if (pg != null && pg.isDirty() != null) {
-                    // all dirty pages are flushed and not dirty page are still in cache
-                    discardPage(pid);
+                if (pg != null) {
+                    if (commit) {
+                        try {
+							flushPage(pg.getId());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+                        pg.setBeforeImage();
+                        //TODO commit log ?????
+                    } else if (pg.isDirty() != null){
+                        // all dirty pages are flushed and not dirty page are still in cache
+                        // discard
+                        discardPage(pid);
+                    }
                 }
             }
         }
@@ -500,10 +503,22 @@ public class BufferPool {
         // not necessary for lab1
     	if( PagesMap.containsKey(pid) )
     	{
-    		Page pg = PagesMap.get(pid);
-    		Database.getCatalog().getDatabaseFile(pg.getId().getTableId()).writePage(pg);
-    		pg.markDirty(false, null);
-    		//((HeapFile)Database.getCatalog().getDatabaseFile(pg.getId().getTableId())).writePage(pg);
+    		Page p = PagesMap.get(pid);
+    		//System.out.println("???");
+            TransactionId dirtier = p.isDirty();
+            if (dirtier != null) {
+                /*
+                    append an update record to the log, with
+                    a before-image and after-image.
+                */
+                Database.getLogFile().logWrite(dirtier, p.getBeforeImage(), p);
+                Database.getLogFile().force();
+
+                // then write back
+                DbFile tb = Database.getCatalog().getDatabaseFile(p.getId().getTableId());
+                p.markDirty(false, null);
+                tb.writePage(p);
+            }
     	}
     }
 
@@ -538,6 +553,7 @@ public class BufferPool {
 	            flushPage(pid);
 	            discardPage(pid);
 	            flag = false;
+	            break;
         	}
         	if( !flag )
         		return;
